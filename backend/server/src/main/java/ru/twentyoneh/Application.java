@@ -53,8 +53,7 @@ public class Application {
             throw new BadRequest("Bad Request");
         });
 
-
-        //Тесты FilesRepo
+        //---------- Тесты FilesRepo ----------
         app.post("/api/dev/seed", ctx -> {
             var id = UUID.randomUUID();
             var token = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(java.util.UUID.randomUUID().toString().getBytes());

@@ -10,6 +10,7 @@ import ru.twentyoneh.config.FlywayMaker;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.sql.SQLException;
 import java.util.Map;
 
 public class Application {
@@ -24,6 +25,18 @@ public class Application {
             jc.http.defaultContentType = "application/json";
             jc.jetty.modifyServer(s -> s.setStopAtShutdown(true));
         });
+
+        // проверка подключения к БД
+        try (var conn = ds.getConnection();
+             var st = conn.createStatement();
+             var rs = st.executeQuery("select version()")){
+            if (rs.next()) {
+                System.out.println("DB version: " + rs.getString(1));
+            }
+        } catch (SQLException e) {
+            System.err.println("SQL error: " + e.getMessage());
+            throw new RuntimeException(e);
+        }
 
         ApiErrorHandler.install(app);
 

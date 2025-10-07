@@ -92,7 +92,54 @@ public class FilesRepositoryJdbc implements FilesRepository {
             return out;
         } catch (SQLException e) {
             System.err.println("list failed: " + e.getMessage());
-            throw new RuntimeException(e); }
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void incDownloadAndTouch(UUID id) {
+        String sql = "UPDATE files SET download_count = download_count + 1, last_download_at = now() WHERE id = ?";
+        try (var c = ds.getConnection(); var ps = c.prepareStatement(sql)) {
+            ps.setObject(1, id);
+            ps.executeUpdate();
+        } catch (Exception e) {
+            System.err.println("incDownload failed: " + e.getMessage());
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public List<FileRecord> selectExpired(int retentionDays, int limit) {
+        // Разница между сейчас и последним скачиванием || созданием файла >= чем retentionDays
+        String sql = """ 
+      SELECT id, original_name, stored_key, size_bytes, mime_type, sha256, token,
+             created_at, last_download_at, download_count
+      FROM files
+      WHERE (now() - COALESCE(last_download_at, created_at)) >= make_interval(days => ?) 
+      ORDER BY created_at
+      LIMIT ?
+      """;
+        try (var c = ds.getConnection(); var ps = c.prepareStatement(sql)) {
+            ps.setInt(1, retentionDays);
+            ps.setInt(2, limit);
+            var out = new java.util.ArrayList<FileRecord>();
+            try (var rs = ps.executeQuery()) { while (rs.next()) out.add(map(rs)); }
+            return out; // вывод списка удалённых эл-ов
+        } catch (Exception e) {
+            System.err.println("selectExpired failed: " + e.getMessage());
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void deleteById(UUID id) {
+        try (var c = ds.getConnection(); var ps = c.prepareStatement("DELETE FROM files WHERE id = ?")) {
+            ps.setObject(1, id);
+            ps.executeUpdate();
+        } catch (Exception e) {
+            System.err.println("deleteById failed: " + e.getMessage());
+            throw new RuntimeException(e);
+        }
     }
 
     private static FileRecord map(ResultSet rs) throws SQLException {

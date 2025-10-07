@@ -1,0 +1,36 @@
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+# Разрешаем сами папки target
+!**/target/
+# Игнорируем содержимое снова
+**/target/*
+# Но включаем все JAR
+!**/target/*.jar
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/

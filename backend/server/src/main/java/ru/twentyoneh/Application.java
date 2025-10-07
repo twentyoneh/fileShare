@@ -37,6 +37,12 @@ public class Application {
 
         // настройка сервера
         var app = Javalin.create(jc ->{
+            jc.bundledPlugins.enableCors(cors -> {
+                cors.addRule(it -> {
+                   it.defaultScheme = "http";
+                   it.allowHost("localhost:5500");
+                });
+            });
             jc.http.defaultContentType = "application/json";
             jc.jetty.modifyServer(s -> s.setStopAtShutdown(true));
         });

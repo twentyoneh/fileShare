@@ -4,11 +4,17 @@ import io.javalin.Javalin;
 import org.flywaydb.core.Flyway;
 import ru.twentyoneh.api.error.ApiErrorHandler;
 import ru.twentyoneh.api.error.BadRequest;
+import ru.twentyoneh.api.routes.DownloadRoutes;
+import ru.twentyoneh.api.routes.UploadRoutes;
 import ru.twentyoneh.config.AppConfig;
 import ru.twentyoneh.config.DataSourceFactory;
 import ru.twentyoneh.config.FlywayMaker;
 import ru.twentyoneh.dto.FileRecord;
 import ru.twentyoneh.repository.FilesRepositoryJdbc;
+import ru.twentyoneh.service.FileService;
+import ru.twentyoneh.service.TokenService;
+import ru.twentyoneh.storage.LocalStorage;
+import ru.twentyoneh.storage.Storage;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -20,12 +26,14 @@ public class Application {
     public static void main(String[] args) throws IOException {
         var cfg = AppConfig.fromEnv();
         Files.createDirectories(cfg.storageDir());
-
         // создание миграций
         var ds = DataSourceFactory.create(cfg);
         FlywayMaker.migrate(ds);
 
-        var repo = new FilesRepositoryJdbc(ds);
+        var repo    = new FilesRepositoryJdbc(ds);
+        Storage storage = new LocalStorage(cfg.storageDir(), cfg.maxUploadBytes());
+        var tokens  = new TokenService();
+        var files   = new FileService(repo, storage, tokens, cfg.baseUrl());
 
         // настройка сервера
         var app = Javalin.create(jc ->{
@@ -49,6 +57,9 @@ public class Application {
 
         // Эндроинты
         app.get("api/health", ctx -> ctx.json(Map.of("status","ok")));
+        app.post("/api/files", ctx -> UploadRoutes.upload(ctx, files));
+        app.get ("/d/{token}",  ctx -> DownloadRoutes.download(ctx, files));
+
         app.get("/api/test400", ctx -> {
             throw new BadRequest("Bad Request");
         });

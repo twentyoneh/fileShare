@@ -1,7 +1,6 @@
 package ru.twentyoneh;
 
 import io.javalin.Javalin;
-import org.flywaydb.core.Flyway;
 import ru.twentyoneh.api.error.ApiErrorHandler;
 import ru.twentyoneh.api.error.BadRequest;
 import ru.twentyoneh.api.routes.DownloadRoutes;

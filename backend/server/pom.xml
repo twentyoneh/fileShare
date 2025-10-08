@@ -15,17 +15,17 @@
             <version>6.7.0</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.flywaydb/flyway-core -->
-        <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-core</artifactId>
-            <version>11.13.2</version>
-        </dependency>
+<!--    <dependency>-->
+<!--        <groupId>org.flywaydb</groupId>-->
+<!--        <artifactId>flyway-core</artifactId>-->
+<!--        <version>11.13.2</version>-->
+<!--    </dependency>-->
         <!-- https://mvnrepository.com/artifact/org.flywaydb/flyway-database-postgresql -->
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-database-postgresql</artifactId>
             <version>11.13.2</version>
-            <scope>runtime</scope>
+<!--            <scope>runtime</scope>-->
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -60,12 +60,6 @@
             <artifactId>lombok</artifactId>
             <version>1.18.42</version>
             <scope>provided</scope>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/ch.qos.logback/logback-core -->
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-core</artifactId>
-            <version>1.5.19</version>
         </dependency>
 
     </dependencies>

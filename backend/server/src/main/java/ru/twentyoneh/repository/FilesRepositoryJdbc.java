@@ -1,6 +1,5 @@
 package ru.twentyoneh.repository;
 
-import org.flywaydb.core.internal.jdbc.JdbcTemplate;
 import ru.twentyoneh.dto.FileRecord;
 
 import javax.sql.DataSource;

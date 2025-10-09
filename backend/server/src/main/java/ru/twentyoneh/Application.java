@@ -7,7 +7,7 @@ import ru.twentyoneh.api.routes.DownloadRoutes;
 import ru.twentyoneh.api.routes.UploadRoutes;
 import ru.twentyoneh.config.AppConfig;
 import ru.twentyoneh.config.DataSourceFactory;
-import ru.twentyoneh.config.FlywayMaker;
+import ru.twentyoneh.config.LiquibaseRunner;
 import ru.twentyoneh.dto.FileRecord;
 import ru.twentyoneh.repository.FilesRepositoryJdbc;
 import ru.twentyoneh.service.FileService;
@@ -25,9 +25,9 @@ public class Application {
     public static void main(String[] args) throws IOException {
         var cfg = AppConfig.fromEnv();
         Files.createDirectories(cfg.storageDir());
-        // создание миграций
         var ds = DataSourceFactory.create(cfg);
-        FlywayMaker.migrate(ds);
+        LiquibaseRunner.run(ds);
+
 
         var repo    = new FilesRepositoryJdbc(ds);
         Storage storage = new LocalStorage(cfg.storageDir(), cfg.maxUploadBytes());

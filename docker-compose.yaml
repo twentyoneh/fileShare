@@ -29,6 +29,7 @@ services:
       STORAGE_DIR: /data
       MAX_UPLOAD_MB: 256
       RETENTION_DAYS: 30
+      MIGRATOR: liquibase
     depends_on:
       db:
         condition: service_healthy

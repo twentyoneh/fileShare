@@ -21,12 +21,7 @@
 <!--        <version>11.13.2</version>-->
 <!--    </dependency>-->
         <!-- https://mvnrepository.com/artifact/org.flywaydb/flyway-database-postgresql -->
-        <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-database-postgresql</artifactId>
-            <version>11.13.2</version>
-<!--            <scope>runtime</scope>-->
-        </dependency>
+
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
@@ -60,6 +55,11 @@
             <artifactId>lombok</artifactId>
             <version>1.18.42</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.liquibase</groupId>
+            <artifactId>liquibase-core</artifactId>
+            <version>5.0.1</version>
         </dependency>
 
     </dependencies>

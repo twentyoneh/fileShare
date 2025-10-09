@@ -99,6 +99,7 @@ public final class LocalStorage implements Storage {
 
     @Override
     public InputStream open(String storedKey) throws IOException {
+        logger.log(Level.INFO, "Opening file {0}", storedKey);
         Path p = resolveKey(storedKey);
         if (!Files.isRegularFile(p)) throw new NoSuchFileException("not found: " + storedKey);
         return Files.newInputStream(p, READ);

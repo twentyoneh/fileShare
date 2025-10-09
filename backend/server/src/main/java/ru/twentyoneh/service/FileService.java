@@ -58,9 +58,14 @@ public final class FileService {
     }
 
     public Download openByToken(String token) throws Exception {
-        var rec = repo.findByToken(token).orElseThrow(NotFound::new);
+        var rec = repo.findByToken(token).stream().findAny().orElse(null);
+        if(rec == null) {
+            logger.log(Level.WARNING, "Token {0} not found", token);
+            throw new NotFound();
+        }
         var in = storage.open(rec.getStoredKey());
         repo.incDownloadAndTouch(rec.getId());
+        logger.log(Level.INFO, "Download {0} complete!", rec.getStoredKey());
         return new Download(rec, in);
     }
 

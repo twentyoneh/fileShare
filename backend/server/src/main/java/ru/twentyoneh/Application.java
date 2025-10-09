@@ -35,10 +35,10 @@ public class Application {
         LiquibaseRunner.run(ds);
 
         // создание репозитория, логики локального хранилища
-        var repo    = new FilesRepositoryJdbc(ds);
+        var repo = new FilesRepositoryJdbc(ds);
         Storage storage = new LocalStorage(cfg.storageDir(), cfg.maxUploadBytes());
-        var tokens  = new TokenService();
-        var files   = new FileService(repo, storage, tokens, cfg.baseUrl());
+        var tokens = new TokenService();
+        var files  = new FileService(repo, storage, tokens, cfg.baseUrl());
 
         // настройка сервера
         var app = Javalin.create(jc ->{

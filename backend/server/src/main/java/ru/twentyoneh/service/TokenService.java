@@ -9,6 +9,6 @@ public final class TokenService {
     public String newToken(){
         byte[] token = new byte[18];
         random.nextBytes(token);
-        return Base64.getEncoder().withoutPadding().encodeToString(token);
+        return Base64.getEncoder().withoutPadding().encodeToString(token).replaceAll("/", "");
     }
 }

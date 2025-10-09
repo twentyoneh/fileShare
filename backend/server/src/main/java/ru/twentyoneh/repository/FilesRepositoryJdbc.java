@@ -24,16 +24,16 @@ public class FilesRepositoryJdbc implements FilesRepository {
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
         try(var conn = ds.getConnection(); var ps = conn.prepareStatement(sql)) {
-            ps.setObject(1,rec.id());
-            ps.setString(2,rec.originalName());
-            ps.setString(3,rec.storedKey());
-            ps.setLong(4,rec.sizeBytes());
-            setStrOrNull(ps,5,rec.mimeType());
-            setStrOrNull(ps,6,rec.sha256());
-            ps.setString(7, rec.token());
-            ps.setTimestamp(8, Timestamp.from(rec.createdAt()));
-            setTsOrNull(ps,9,rec.lastDownloadAt());
-            ps.setInt(10, rec.downloadCount());
+            ps.setObject(1,rec.getId());
+            ps.setString(2,rec.getOriginalName());
+            ps.setString(3,rec.getStoredKey());
+            ps.setLong(4,rec.getSizeBytes());
+            setStrOrNull(ps,5,rec.getMimeType());
+            setStrOrNull(ps,6,rec.getSha256());
+            ps.setString(7, rec.getToken());
+            ps.setTimestamp(8, Timestamp.from(rec.getCreatedAt()));
+            setTsOrNull(ps,9,rec.getLastDownloadAt());
+            ps.setInt(10, rec.getDownloadCount());
             ps.executeUpdate();
         } catch (SQLException e) {
             System.err.println("insert failed: " + e.getMessage());

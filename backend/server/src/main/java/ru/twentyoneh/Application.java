@@ -20,15 +20,21 @@ import java.nio.file.Files;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Application {
+    static final Logger logger = Logger.getLogger(ru.twentyoneh.Application.class.getName());
+
     public static void main(String[] args) throws IOException {
         var cfg = AppConfig.fromEnv();
         Files.createDirectories(cfg.storageDir());
+        // подключение к БД
         var ds = DataSourceFactory.create(cfg);
+        // миграции
         LiquibaseRunner.run(ds);
 
-
+        // создание репозитория, логики локального хранилища
         var repo    = new FilesRepositoryJdbc(ds);
         Storage storage = new LocalStorage(cfg.storageDir(), cfg.maxUploadBytes());
         var tokens  = new TokenService();
@@ -51,49 +57,20 @@ public class Application {
              var st = conn.createStatement();
              var rs = st.executeQuery("select version()")){
             if (rs.next()) {
-                System.out.println("DB version: " + rs.getString(1));
+                logger.log(Level.INFO, "DB Version found: " + rs.getString(1));
             }
         } catch (SQLException e) {
-            System.err.println("SQL error: " + e.getMessage());
+            logger.log(Level.WARNING, "DB error: " + e.getMessage());
             throw new RuntimeException(e);
         }
 
+        // обработчик ошибок
         ApiErrorHandler.install(app);
 
         // Эндроинты
         app.get("api/health", ctx -> ctx.json(Map.of("status","ok")));
         app.post("/api/files", ctx -> UploadRoutes.upload(ctx, files));
         app.get ("/d/{token}",  ctx -> DownloadRoutes.download(ctx, files));
-
-        app.get("/api/test400", ctx -> {
-            throw new BadRequest("Bad Request");
-        });
-
-        //---------- Тесты FilesRepo ----------
-        app.post("/api/dev/seed", ctx -> {
-            var id = UUID.randomUUID();
-            var token = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(java.util.UUID.randomUUID().toString().getBytes());
-            var rec = new FileRecord(
-                    id, "hello.txt", "aa/bb/" + id + ".txt", 12L,
-                    "text/plain", null, token,
-                    java.time.Instant.now(), null, 0
-            );
-            repo.insert(rec);
-            ctx.json(java.util.Map.of("id", id.toString(), "token", token));
-        });
-
-        // получить по токену
-        app.get("/api/dev/by-token/{token}", ctx -> {
-            var tok = ctx.pathParam("token");
-            var opt = repo.findByToken(tok);
-            if (opt.isEmpty()) { ctx.status(404).json(java.util.Map.of("error","not_found")); return; }
-            var r = opt.get();
-            ctx.json(java.util.Map.of("id", r.id().toString(), "name", r.originalName(), "size", r.sizeBytes()));
-        });
-
-        // счётчик и список
-        app.get("/api/dev/count", ctx -> ctx.json(java.util.Map.of("count", repo.countAll())));
-        app.get("/api/dev/list", ctx -> ctx.json(repo.list(10,0)));
 
         app.start(cfg.port());
     }

@@ -1,5 +1,6 @@
 package ru.twentyoneh.storage;
 
+import org.slf4j.LoggerFactory;
 import ru.twentyoneh.api.error.PayloadTooLargeException;
 
 import java.io.IOException;
@@ -11,17 +12,19 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;
 import static java.nio.file.StandardOpenOption.*;
 
 public final class LocalStorage implements Storage {
-    private static final Pattern SAFE_EXT = Pattern.compile("\\.[a-z0-9]{1,8}");
     private static final Pattern KEY_PATTERN =
             Pattern.compile("^[a-f0-9]{2}/[a-f0-9]{2}/[a-f0-9]{32}(?:\\.[a-z0-9]{1,8})?$");
 
     private static final int BUF = 64 * 1024;
+    private final Logger logger = Logger.getLogger(LocalStorage.class.getName());
 
     private final Path root;
     private final long maxUploadBytes;
@@ -36,8 +39,7 @@ public final class LocalStorage implements Storage {
 
     @Override
     public String store(InputStream in, long announcedSize, String suggestedExt) throws IOException {
-        Objects.requireNonNull(in,"input");
-        String ext = normalizeExt(suggestedExt);
+        Objects.requireNonNull(in,"input"); // в случае null => NullPointerException(message)
 
         if(announcedSize > 0 && announcedSize >  maxUploadBytes) {
             throw new PayloadTooLargeException("file exceeds configured limit");
@@ -45,28 +47,31 @@ public final class LocalStorage implements Storage {
 
         String uuidHex = UUID.randomUUID().toString().replace("-", "");
         String p1 = uuidHex.substring(0, 2), p2 =  uuidHex.substring(2, 4);
-        String fileName = uuidHex + ext;
+        String fileName = uuidHex + suggestedExt;
+        logger.log(Level.INFO, "Finally file name: " + fileName);
 
-        Path dir = root.resolve(p1).resolve(p2);
+        Path dir = root.resolve(p1).resolve(p2); // создать подпапку Пример: uuidHex = 9B14774FF21 директория в котоой будет лежать файл: 9B/14/uuidHex+suggestedExt
         Files.createDirectories(dir);
+        logger.log(Level.INFO, "Creating directory for file: " + dir);
 
         Path tmp = dir.resolve("." + fileName + "." + Long.toString(ThreadLocalRandom.current().nextLong(), 36) + ".tmp");
         Path target = dir.resolve(fileName);
 
+        logger.log(Level.INFO, "Starting create file {0}{1}: on local storage", new Object[]{p1,p2});
         long written = 0;
         boolean success = false;
         try(OutputStream out = Files.newOutputStream(tmp,CREATE_NEW,WRITE)) {
             byte[] buf = new byte[BUF];
             while (true) {
-                int r = in.read(buf);
-                if(r == -1) break;
-                written += r;
+                int len = in.read(buf);
+                if(len == -1) break;
+                written += len;
                 if(written > maxUploadBytes) {
                     try {out.close(); } catch (Exception ignore) {}
                     safeDelete(tmp);
                     throw new PayloadTooLargeException("file exceeds configured limit");
                 }
-                out.write(buf, 0, r);
+                out.write(buf, 0, len);
             }
             out.flush();
             success = true;
@@ -77,11 +82,17 @@ public final class LocalStorage implements Storage {
             if (!success) safeDelete(tmp);
         }
         try {
+            logger.log(Level.INFO, "Tmp for {0}{1} has been created, start move", new  Object[]{p1,p2});
             Files.move(tmp, target, ATOMIC_MOVE);
         } catch (IOException moveEx) {
             if (Files.notExists(target)) Files.move(tmp, target);
-            else { safeDelete(tmp); throw moveEx; }
+            else {
+                logger.log(Level.WARNING, "Move failed for {0}", new  Object[]{p1,p2});
+                safeDelete(tmp);
+                throw moveEx;
+            }
         }
+        logger.log(Level.INFO, "Move complete");
 
         return p1 + "/" + p2 + "/" + fileName;
     }
@@ -105,11 +116,7 @@ public final class LocalStorage implements Storage {
     }
 
     private static void safeDelete(Path p){ try { Files.deleteIfExists(p); } catch (Exception ignore) {} }
-    private static String normalizeExt(String ext){
-        if (ext == null || ext.isBlank()) return "";
-        ext = ext.trim().toLowerCase();
-        return SAFE_EXT.matcher(ext).matches() ? ext : "";
-    }
+
     private Path resolveKey(String key) {
         if (key == null || !KEY_PATTERN.matcher(key).matches())
             throw new IllegalArgumentException("bad storedKey format");

@@ -1,0 +1,98 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1-create-files
+      author: twentyoneh
+      changes:
+        - createTable:
+            schemaName: public
+            tableName: files
+            ifNotExists: true
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: owner_id
+                  type: UUID
+              - column:
+                  name: original_name
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: stored_key
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: size_bytes
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: mime_type
+                  type: TEXT
+              - column:
+                  name: sha256
+                  type: TEXT
+              - column:
+                  name: token
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_download_at
+                  type: TIMESTAMP WITH TIME ZONE
+              - column:
+                  name: download_count
+                  type: INT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 1-index-created-at
+      author: you
+      preConditions:
+        onError: HALT
+        onFail: MARK_RAN
+        not:
+          indexExists:
+            schemaName: public
+            indexName: idx_files_created_at
+      changes:
+        - createIndex:
+            schemaName: public
+            tableName: files
+            indexName: idx_files_created_at
+            columns:
+              - column: { name: created_at }
+
+
+  - changeSet:
+      id: 1-index-last-download-at
+      author: you
+      preConditions:
+        onError: HALT
+        onFail: MARK_RAN
+        not:
+          indexExists:
+            schemaName: public
+            indexName: idx_files_last_download_at
+      changes:
+        - createIndex:
+            schemaName: public
+            tableName: files
+            indexName: idx_files_last_download_at
+            columns:
+              - column: { name: last_download_at }

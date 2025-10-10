@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Файлообмен — загрузка</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+  <main class="container">
+    <h1>Загрузка файла</h1>
+
+    <form id="uploadForm">
+      <div class="dropzone" id="dropzone">
+        <input type="file" id="fileInput" name="file" required />
+        <p>Перетащите файл сюда или нажмите, чтобы выбрать</p>
+      </div>
+      <button id="uploadBtn" type="submit" disabled>Загрузить</button>
+    </form>
+
+    <div id="progressWrap" class="hidden">
+      <div class="progress"><div id="progressBar" class="progress__bar"></div></div>
+      <div class="progress__text"><span id="progressText">0%</span></div>
+    </div>
+
+    <div id="result" class="card hidden">
+      <h2>Готово 🎉</h2>
+      <p>Ссылка на скачивание:</p>
+      <p><a id="downloadLink" href="#" target="_blank" rel="noopener"></a></p>
+      <div class="row"><button id="copyBtn" type="button">Скопировать ссылку</button></div>
+    </div>
+
+    <div id="error" class="error hidden"></div>
+
+    <footer class="muted"><small>Файл удалится, если его не скачивали 30 дней.</small></footer>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

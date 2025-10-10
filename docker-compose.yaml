@@ -1,0 +1,52 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:17
+    container_name: filesvc-db
+    environment:
+      POSTGRES_DB: filesvc
+      POSTGRES_USER: filesvc
+      POSTGRES_PASSWORD: filesvc
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U filesvc -d filesvc"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend/server
+    container_name: filesvc-backend
+    environment:
+      PORT: 8080
+      BASE_URL: http://localhost:8080
+      DB_URL: jdbc:postgresql://db:5432/filesvc
+      DB_USER: filesvc
+      DB_PASSWORD: filesvc
+      STORAGE_DIR: /data
+      MAX_UPLOAD_MB: 256
+      RETENTION_DAYS: 30
+      MIGRATOR: liquibase
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - storage_data:/data
+    ports:
+      - "8080:8080" # публикуем API на хост
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: filesvc-frontend
+    ports:
+      - "5500:80" # фронт доступен по http://localhost:5500
+    depends_on:
+      - backend
+
+volumes:
+  pg_data:
+  storage_data:

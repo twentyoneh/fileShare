@@ -11,6 +11,7 @@ import ru.twentyoneh.config.LiquibaseRunner;
 import ru.twentyoneh.dto.FileRecord;
 import ru.twentyoneh.repository.FilesRepositoryJdbc;
 import ru.twentyoneh.service.FileService;
+import ru.twentyoneh.service.RetentionCleanupService;
 import ru.twentyoneh.service.TokenService;
 import ru.twentyoneh.storage.LocalStorage;
 import ru.twentyoneh.storage.Storage;
@@ -18,6 +19,7 @@ import ru.twentyoneh.storage.Storage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -71,6 +73,11 @@ public class Application {
         app.get("api/health", ctx -> ctx.json(Map.of("status","ok")));
         app.post("/api/files", ctx -> UploadRoutes.upload(ctx, files));
         app.get ("/d/{token}",  ctx -> DownloadRoutes.download(ctx, files));
+
+        // запуск сборщика мусора
+        var cleaner = new RetentionCleanupService(repo,storage,ds, cfg.retentionDays(), 200,false);
+        cleaner.start(Duration.ofMinutes(2), Duration.ofHours(24));
+        Runtime.getRuntime().addShutdownHook(new Thread(cleaner::close));
 
         app.start(cfg.port());
     }

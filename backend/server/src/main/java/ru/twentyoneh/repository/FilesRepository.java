@@ -11,8 +11,8 @@ public interface FilesRepository {
     Optional<FileRecord> findByToken(String token);
     long countAll();
     List<FileRecord> list(int limit, int offset);
+    List<FileRecord> selectExpired(int retentionDays, int limit);
 
     void incDownloadAndTouch(UUID id);
-    List<FileRecord> selectExpired(int retentionDays, int limit);
     void deleteById(UUID id);
 }
